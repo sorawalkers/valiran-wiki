@@ -1309,3 +1309,11 @@
 }
 .infobox-portrait-wrap .infobox-portrait-tag { z-index: 2; }
 
+
+
+/* Loading animation */
+@keyframes archive-load {
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(0%); }
+  100% { transform: translateX(100%); }
+}
