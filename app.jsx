@@ -33,13 +33,7 @@ function LoadingScreen() {
           animation: 'archive-load 1.6s ease-in-out infinite',
         }} />
       </div>
-      <style>{\`
-        @keyframes archive-load {
-          0%   { transform: translateX(-100%); }
-          50%  { transform: translateX(0%); }
-          100% { transform: translateX(100%); }
-        }
-      \`}</style>
+
       <div style={{
         marginTop: 20,
         fontFamily: 'JetBrains Mono', fontSize: 9,
