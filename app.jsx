@@ -98,13 +98,12 @@ function PalettePicker({ value, onChange }) {
 
 function App() {
   const [active, setActive]   = useStateApp('home');
-  const [dbReady, setDbReady] = useStateApp(false);
-
-  // Carrega dados do Supabase na inicialização
+  // App renders immediately with static data from data.jsx
+  // Supabase data loads in background and updates components via window.Data
   useEffectApp(() => {
-    DB.loadAll()
-      .then(() => setDbReady(true))
-      .catch(err => { console.error('DB load error:', err); setDbReady(true); });
+    if (window.DB) {
+      DB.loadAll().catch(err => console.warn('Supabase load error (non-fatal):', err));
+    }
   }, []);
 
   // Tweaks
@@ -154,8 +153,6 @@ function App() {
         return <ComingSoon page={active} onNav={setActive} />;
     }
   };
-
-  if (!dbReady) return <LoadingScreen />;
 
   return (
     <AuthProvider>
