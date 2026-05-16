@@ -146,7 +146,9 @@ function CharacterFormModal({ initial, onClose, onSaved }) {
 
 function Characters({ onNav }) {
   const { isEditor } = useAuth();
-  const [showForm, setShowForm] = React.useState(false);
+  const [showForm, setShowForm]   = React.useState(false);
+  const [confirmId, setConfirmId] = React.useState(null);
+  const [deletingId, setDeletingId] = React.useState(null);
   const [cast, setCast] = React.useState(() => {
     const base = [
       { id:'kathryn',    tag:'PC',      tagClass:'pc',   name:'Käthryn Verlaine',    role:'Paladina dissidente · Lancaster',            faction:'Lancaster (caído)',   cls:'Paladina · nv. 7' },
@@ -176,6 +178,19 @@ function Characters({ onNav }) {
     setShowForm(false);
   }
 
+  async function handleDelete(e, charId) {
+    e.stopPropagation();
+    if (confirmId !== charId) { setConfirmId(charId); return; }
+    setDeletingId(charId);
+    try {
+      await DB.deleteCharacter(charId);
+      delete window.Entities.characters[charId];
+      setCast(prev => prev.filter(c => c.id !== charId));
+    } catch(err) { console.error(err); }
+    setDeletingId(null);
+    setConfirmId(null);
+  }
+
   return (
     <div className="page" data-screen-label="12 Dramatis Personae">
       <header className="page-header">
@@ -196,10 +211,26 @@ function Characters({ onNav }) {
 
       <div className="cast-grid">
         {cast.map(c => (
-          <article key={c.id} className="cast-card" onClick={() => onNav('character:' + c.id)}>
+          <article key={c.id} className="cast-card" onClick={() => confirmId === c.id ? setConfirmId(null) : onNav('character:' + c.id)}>
             <div className="cast-portrait">
               <image-slot id={'char-portrait-'+c.id} shape="rect" placeholder={'Arraste retrato · '+c.name} style={{position:'absolute',inset:0,width:'100%',height:'100%'}}></image-slot>
               <span className={'cast-portrait-tag '+c.tagClass} style={{zIndex:2}}>{c.tag}</span>
+              {isEditor && (
+                <button
+                  onClick={e => handleDelete(e, c.id)}
+                  disabled={deletingId === c.id}
+                  style={{
+                    position:'absolute', top:8, right:8, zIndex:3,
+                    padding:'3px 8px', background: confirmId===c.id ? 'rgba(200,75,75,0.85)' : 'rgba(14,13,16,0.75)',
+                    border: '1px solid ' + (confirmId===c.id ? '#c84b4b' : 'rgba(255,255,255,0.2)'),
+                    color: confirmId===c.id ? '#fff' : 'var(--foam-dim)',
+                    fontFamily:'JetBrains Mono', fontSize:9, letterSpacing:'0.12em',
+                    textTransform:'uppercase', cursor:'pointer', borderRadius:2,
+                  }}
+                >
+                  {deletingId===c.id ? '...' : confirmId===c.id ? 'Confirmar' : '×'}
+                </button>
+              )}
             </div>
             <div className="cast-body">
               <h3 className="cast-name">{c.name}</h3>

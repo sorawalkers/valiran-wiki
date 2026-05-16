@@ -81,12 +81,25 @@ function TimelineEventModal({ onClose, onSaved }) {
 
 function Timeline({ onNav }) {
   const { isEditor } = useAuth();
-  const [events, setEvents] = React.useState(window.Data.timeline || []);
-  const [showForm, setShowForm] = React.useState(false);
+  const [events, setEvents]       = React.useState(window.Data.timeline || []);
+  const [showForm, setShowForm]   = React.useState(false);
+  const [confirmIdx, setConfirmIdx] = React.useState(null);
+  const [deletingIdx, setDeletingIdx] = React.useState(null);
 
   function handleSaved(ev) {
     setEvents(prev => [...prev, ev]);
     setShowForm(false);
+  }
+
+  async function handleDelete(i, ev) {
+    if (confirmIdx !== i) { setConfirmIdx(i); return; }
+    setDeletingIdx(i);
+    try {
+      if (ev.id) await DB.deleteTimelineEvent(ev.id);
+      setEvents(prev => prev.filter((_, idx) => idx !== i));
+    } catch(e) { console.error(e); }
+    setDeletingIdx(null);
+    setConfirmIdx(null);
   }
 
   return (
@@ -114,7 +127,7 @@ function Timeline({ onNav }) {
             </div>
           );
           return (
-            <div key={i} className={'tl-event' + (e.kind ? ' ' + e.kind : '')}>
+            <div key={i} className={'tl-event' + (e.kind ? ' ' + e.kind : '')} style={{position:'relative'}}>
               <div className="tl-event-year">
                 <span className="tl-year">{e.year}</span>
                 {e.label && <span className="tl-label">{e.label}</span>}
@@ -124,6 +137,23 @@ function Timeline({ onNav }) {
                 {e.desc && <p className="tl-event-desc">{e.desc}</p>}
                 {e.tag && <span className="tl-tag">{e.tag}</span>}
               </div>
+              {isEditor && (
+                <div style={{display:'flex', gap:6, alignItems:'center', paddingTop:2}}>
+                  {confirmIdx === i && (
+                    <button onClick={() => setConfirmIdx(null)} style={{...S_tl.btnPrimary, fontSize:9, padding:'4px 10px', opacity:0.5}}>Cancelar</button>
+                  )}
+                  <button
+                    onClick={() => handleDelete(i, e)}
+                    disabled={deletingIdx === i}
+                    style={{
+                      ...S_tl.btnPrimary, fontSize:9, padding:'4px 10px',
+                      ...(confirmIdx === i ? { borderColor:'#c84b4b', color:'#c84b4b' } : { opacity:0.45 }),
+                    }}
+                  >
+                    {deletingIdx === i ? '...' : confirmIdx === i ? 'Confirmar exclusão' : 'Excluir'}
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}

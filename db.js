@@ -51,7 +51,7 @@ window.DB = {
     if (timeline.length && window.Data) {
       window.Data.timeline = timeline.map(e =>
         e.is_era ? { era: e.era_label }
-                 : { year: e.year, label: e.label, title: e.title, desc: e.description, tag: e.tag, kind: e.kind }
+                 : { id: e.id, year: e.year, label: e.label, title: e.title, desc: e.description, tag: e.tag, kind: e.kind }
       );
     }
 
@@ -131,6 +131,21 @@ window.DB = {
       title: data.title, description: data.desc, tag: data.tag, kind: data.kind || null,
     };
     const { error } = await window.sb.from('timeline_events').insert(payload);
+    if (error) throw error;
+  },
+
+  async deleteSession(num) {
+    const { error } = await window.sb.from('sessions').delete().eq('num', parseInt(num));
+    if (error) throw error;
+  },
+
+  async deleteCharacter(id) {
+    const { error } = await window.sb.from('characters').delete().eq('id', id);
+    if (error) throw error;
+  },
+
+  async deleteTimelineEvent(id) {
+    const { error } = await window.sb.from('timeline_events').delete().eq('id', id);
     if (error) throw error;
   },
 

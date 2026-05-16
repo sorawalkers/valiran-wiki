@@ -201,8 +201,10 @@ function Sessions({ onNav }) {
 
 function SessionDetail({ id, onNav }) {
   const { isEditor } = useAuth();
-  const [s, setS]     = React.useState(window.Entities.sessions[id]);
+  const [s, setS]         = React.useState(window.Entities.sessions[id]);
   const [showEdit, setEdit] = React.useState(false);
+  const [confirmDel, setConfirmDel] = React.useState(false);
+  const [deleting, setDeleting]     = React.useState(false);
 
   if (!s) return (
     <div className="page">
@@ -213,11 +215,35 @@ function SessionDetail({ id, onNav }) {
 
   function handleSaved() { setS({ ...window.Entities.sessions[id] }); setEdit(false); }
 
+  async function handleDelete() {
+    if (!confirmDel) { setConfirmDel(true); return; }
+    setDeleting(true);
+    try {
+      await DB.deleteSession(s.num);
+      delete window.Entities.sessions[id];
+      onNav('sessions');
+    } catch(e) { console.error(e); setDeleting(false); setConfirmDel(false); }
+  }
+
+  const delBtnStyle = confirmDel
+    ? { ...S_sess.btnPrimary, borderColor:'#c84b4b', color:'#c84b4b' }
+    : { ...S_sess.btnPrimary, opacity: 0.6 };
+
   return (
     <div className="session-detail" data-screen-label={'Sessão ' + s.num}>
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8 }}>
         <button className="back-btn" style={{ margin:0 }} onClick={() => onNav('sessions')}>Voltar ao diário</button>
-        {isEditor && <button style={S_sess.btnPrimary} onClick={() => setEdit(true)}>Editar sessão</button>}
+        {isEditor && (
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+            {confirmDel && (
+              <button style={{ ...S_sess.btnPrimary, opacity:0.5 }} onClick={() => setConfirmDel(false)}>Cancelar</button>
+            )}
+            <button style={delBtnStyle} onClick={handleDelete} disabled={deleting}>
+              {deleting ? 'Excluindo...' : confirmDel ? 'Confirmar exclusão' : 'Excluir sessão'}
+            </button>
+            <button style={S_sess.btnPrimary} onClick={() => setEdit(true)}>Editar sessão</button>
+          </div>
+        )}
       </div>
 
       <header className="session-detail-head">
